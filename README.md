@@ -1,1 +1,1 @@
-# Praktikum-1
+# praktikum_simple-app
