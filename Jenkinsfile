@@ -1,12 +1,13 @@
 pipeline {
     agent any
+
     environment {
-        IMAGE_NAME = 'abdieeuh/simple-app'
-        REGISTRY = 'https://index.docker.io/v1/'
-        REGISTRY_CREDENTIALS = 'dockerhub-credentials'
-        PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-        DOCKER_HOST = "unix:///var/run/docker.sock"
+        // GANTI sesuai Docker Hub kamu
+        DOCKER_IMAGE = 'usernamedockerhub/praktikum-1'
+        // ID credentials (Username with password) di Manage Jenkins > Credentials
+        DOCKER_CREDS = 'dockerhub-credentials'
     }
+
     stages {
         stage('Checkout') {
             steps {
@@ -14,36 +15,42 @@ pipeline {
                 checkout scm
             }
         }
+
         stage('Build') {
             steps {
                 echo 'Mulai build aplikasi'
-                sh 'echo "Build selesai ✅"'
+                bat 'echo Build aplikasi berjalan'
+                // Contoh kalau project Node.js:
+                // bat 'npm install'
+                // bat 'npm run build'
             }
         }
+
         stage('Build Docker Image') {
             steps {
-                script {
-                    echo 'Membangun Docker image...'
-                    docker.build("${IMAGE_NAME}:${env.BUILD_NUMBER}")
-                    echo "Image berhasil dibuat: ${IMAGE_NAME}:${env.BUILD_NUMBER}"
-                }
+                bat 'docker --version'
+                bat 'docker build -t %DOCKER_IMAGE%:%BUILD_NUMBER% -t %DOCKER_IMAGE%:latest .'
             }
         }
+
         stage('Push Docker Image') {
             steps {
-                script {
-                    echo 'Push image ke Docker Hub...'
-                    docker.withRegistry(REGISTRY, REGISTRY_CREDENTIALS) {
-                        docker.image("${IMAGE_NAME}:${env.BUILD_NUMBER}").push()
-                        docker.image("${IMAGE_NAME}:${env.BUILD_NUMBER}").push('latest')
-                    }
+                withCredentials([usernamePassword(credentialsId: "${DOCKER_CREDS}",
+                                                  usernameVariable: 'DOCKER_USER',
+                                                  passwordVariable: 'DOCKER_PASS')]) {
+                    // Jangan beri spasi sebelum tanda | agar password tidak ikut spasi
+                    bat 'echo %DOCKER_PASS%| docker login -u %DOCKER_USER% --password-stdin'
+                    bat 'docker push %DOCKER_IMAGE%:%BUILD_NUMBER%'
+                    bat 'docker push %DOCKER_IMAGE%:latest'
                 }
             }
         }
     }
+
     post {
         always {
-            echo 'Selesai build 🏁OYYY'
+            bat 'docker logout'
+            echo 'Selesai build 🏁'
         }
     }
 }
