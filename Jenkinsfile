@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         // GANTI sesuai Docker Hub kamu
-        DOCKER_IMAGE = 'usernamedockerhub/praktikum-1'
+        DOCKER_IMAGE = 'aguspermana/praktikum-1'
         // ID credentials (Username with password) di Manage Jenkins > Credentials
         DOCKER_CREDS = 'dockerhub-credentials'
     }
